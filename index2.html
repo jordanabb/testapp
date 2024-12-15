@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Scatterplot App</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+      }
+    </style>
+</head>
+<body>
+    <h1>Data Visualization App</h1>
+
+    <label for="variable1">Variable 1:</label>
+    <select id="variable1">
+        <option value="population">Population</option>
+        <option value="unemployed">Unemployed</option>
+        <option value="white">White</option>
+    </select>
+
+    <label for="variable2">Variable 2:</label>
+    <select id="variable2">
+        <option value="population">Population</option>
+        <option value="unemployed">Unemployed</option>
+        <option value="white">White</option>
+    </select>
+
+    <label for="geography">Geography:</label>
+    <select id="geography">
+        <option value="Name">School District</option>
+        <option value="county">County</option>
+    </select>
+
+    <button onclick="fetchAndPlotData()">Plot Data</button>
+
+    <canvas id="myChart"></canvas>
+
+    <script>
+    async function fetchAndPlotData() {
+            const apiEndpoint = 'https://1re8zeux38.execute-api.us-east-1.amazonaws.com/readfroms3transform'; // Replace with your API URL
+            const variable1 = document.getElementById('variable1').value;
+            const variable2 = document.getElementById('variable2').value;
+            const geography = document.getElementById('geography').value;
+
+            try {
+              const response = await fetch(apiEndpoint, {
+                    method: 'POST',  // Or 'GET' if that's what your API uses
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                  // Here we might want to send the geography to the API, but we are omitting this for now.
+                   // body: JSON.stringify({geography: geography})
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+
+                // Prepare data for Chart.js
+                const labels = data.map(item => `${item.GEOID}-${item.Year}`);
+                const data1 = data.map(item => item[variable1]);
+                const data2 = data.map(item => item[variable2]);
+
+
+                 const ctx = document.getElementById('myChart').getContext('2d');
+                 const myChart = new Chart(ctx, {
+                      type: 'scatter',
+                      data: {
+                        labels: labels,
+                        datasets: [{
+                        label: `Scatterplot of ${variable1} vs ${variable2}`,
+                            data: data.map((item, index) => ({
+                                x: data1[index],
+                                y: data2[index]
+                             })),
+                        backgroundColor: 'rgb(54, 162, 235)',
+                        borderColor: 'rgb(54, 162, 235)',
+                    }],
+                },
+                 options: {
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: variable1
+                              }
+                           },
+                        y: {
+                            title: {
+                                display: true,
+                                text: variable2
+                              }
+                           },
+                      }
+                  }
+                 });
+            } catch (error) {
+                console.error('Error fetching or plotting data:', error);
+                 alert("Error fetching data. Please check the console.");
+            }
+        }
+
+    </script>
+
+</body>
+</html>
